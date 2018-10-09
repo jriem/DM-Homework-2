@@ -1,0 +1,73 @@
+######################################################################
+################### Loading the datasets #############################
+
+##Setting the working directory where the input file is present
+setwd("~/Dropbox/COURSES/DMBA/Homework/hw2/")
+bank  <- read.csv("bank-data.csv")
+
+######################################################################
+######################Part B- Dataset Exploration#####################
+
+###Exploring the data ----
+str(bank)
+
+#####Question 1#####
+summary(bank$income)
+
+#####Question 2#####
+##Sample plot 
+plot(y = bank$married, x = bank$pep,
+     main = "Barchart of married vs pep",
+     ylab = "married",
+     xlab = "pep")
+
+#####Question 3#####
+##loading entropy library
+library(entropy)
+
+##A function that calculates the entopy
+shannonEntropy<-function(x){
+  Col_ent<-entropy.empirical(table(x)/length(x), unit="log2")
+  return(Col_ent)
+}
+
+##apply function lets us perform column-wise or row-wise operation 
+##we pass the data set "bank" and value "2" for column-wise operation 
+##followed by the function "shannonEntropy" 
+all_entropy<-apply(bank,2,shannonEntropy)
+all_entropy
+
+
+######################################################################
+######################Part C- Decision Tree###########################
+
+#####Question 1#####
+library(caret)
+
+#changing the yes no variable to buy/notbuy for convenience 
+#of plot later on. The terminal nodes on decision tree plot
+#gives y= (probability of class variable by alphabetizaton)
+pepbin=as.character(bank$pep)
+pepbin[which(bank$pep=="NO")]="notbuy"
+pepbin[which(bank$pep=="YES")]="buy"
+bank$pep=pepbin
+
+##seed is used to replicate the results when using random function
+##set the seed to any number (here we use 100)
+##to replicate the results use the same number   
+##it is also important for you to set this seed for the right answer
+set.seed(100)
+
+#####Question 2#####
+
+cvtree <- train(pep~., data=bank[,-1], 
+                method = 'ctree', 
+                trControl=trainControl(method c= 'cv', number=5),
+                tuneGrid=expand.grid(mincriterion=0.95))
+
+cvtree
+
+plot(cvtree$finalModel, type="simple")
+plot(cvtree$finalModel) #with labels on terminal node
+
+varImp(cvtree)
